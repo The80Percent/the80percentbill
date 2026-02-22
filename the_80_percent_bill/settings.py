@@ -30,17 +30,21 @@ DONATION_LINK = "https://www.buymeacoffee.com/80percentbill"
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-@xax3!&6)_c_d31&m)_wr0u&s7oovcwo4%4wg35zlxer=ch_ko'
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-@xax3!&6)_c_d31&m)_wr0u&s7oovcwo4%4wg35zlxer=ch_ko")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "false").lower() in ("true", "1", "yes")
 
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "the80percentbill.com",
     ".the80percentbill.com",
+    ".railway.app",
+    ".up.railway.app",
 ]
+if extra_hosts := os.environ.get("ALLOWED_HOSTS"):
+    ALLOWED_HOSTS.extend(h.strip() for h in extra_hosts.split(",") if h.strip())
 
 
 # Application definition
@@ -59,8 +63,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -149,4 +154,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"

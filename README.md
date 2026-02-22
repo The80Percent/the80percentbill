@@ -103,6 +103,31 @@ python/the_80_percent_bill/        # Project root (run manage.py from here)
 
 ---
 
+## Railway deployment
+
+1. **Create a Railway project** from your GitHub repo.
+
+2. **Set environment variables** in Railway → your service → Variables:
+
+   | Variable | Required | Description |
+   |----------|----------|-------------|
+   | `SUPABASE_DB_PASSWORD` | Yes | Supabase database password |
+   | `SUPABASE_DB_HOST` | Yes | e.g. `db.xxxx.supabase.co` |
+   | `SUPABASE_DB_NAME` | No | Default: `postgres` |
+   | `SUPABASE_DB_USER` | No | Default: `postgres` |
+   | `SUPABASE_DB_PORT` | No | Default: `5432` |
+   | `GEOCODIO_API_KEY` | Yes | For address → district lookup |
+   | `DJANGO_SECRET_KEY` | Yes (prod) | Random secret; generate a new one for production |
+   | `DEBUG` | No | Set to `false` in production |
+
+3. **Set Root Directory** (if your repo has the app in a subfolder): Railway → Settings → Root Directory → `python/the_80_percent_bill` or wherever `manage.py` lives.
+
+4. **Generate Domain**: Railway → your service → Settings → Networking → Generate Domain.
+
+5. **Create admin user** after first deploy: Railway → your service → ... → Run Command → `python manage.py createsuperuser`.
+
+---
+
 ## Quick reference
 
 | Command | Description |
@@ -110,4 +135,3 @@ python/the_80_percent_bill/        # Project root (run manage.py from here)
 | `python manage.py runserver` | Start dev server |
 | `python manage.py migrate` | Apply migrations |
 | `python manage.py createsuperuser` | Create admin user |
-# the80percentbill
