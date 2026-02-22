@@ -81,6 +81,9 @@ python manage.py createsuperuser
 # 6. Start the dev server
 python manage.py runserver
 # Or use another port if 8000 is in use: python manage.py runserver 8001
+
+# 7. When done, exit the virtual environment
+deactivate
 ```
 
 Open **http://127.0.0.1:8000/** (or your chosen port) in your browser.
@@ -90,10 +93,36 @@ Open **http://127.0.0.1:8000/** (or your chosen port) in your browser.
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `GEOCODIO_API_KEY` | Yes | Address → congressional district lookup |
+| `DEBUG` | No | Set `true` for dev — detailed error pages, auto-reload. Set `false` in production. |
 | `SUPABASE_DB_PASSWORD` | No | If set, uses Supabase. Omit for local SQLite (`db.sqlite3`). |
 | `SUPABASE_DB_HOST` | If using Supabase | Direct: `db.xxx.supabase.co` (local). Pooler: `aws-0-REGION.pooler.supabase.com` (Railway). |
 | `SUPABASE_DB_USER` | If using Supabase | Direct: `postgres`. Pooler: `postgres.PROJECT_REF` |
 | `SUPABASE_USE_POOLER` | No | Set `false` for local (direct/IPv6). Default `true` for Railway (pooler/IPv4). |
+
+**Recommended `.env` for dev:**
+```
+GEOCODIO_API_KEY=your_key_here
+DEBUG=true
+# ... plus SUPABASE_* if using Supabase
+```
+
+---
+
+## GitHub Actions (deploy check)
+
+A workflow runs on push/PR to `main` to validate the app before Railway deploys. Add these **repository secrets** (Settings → Secrets and variables → Actions):
+
+| Secret | Required | Description |
+|--------|----------|-------------|
+| `SUPABASE_DB_PASSWORD` | Yes | Supabase database password |
+| `GEOCODIO_API_KEY` | Yes | For address lookup |
+| `DJANGO_SECRET_KEY` | Yes | Any random string (can match production) |
+| `SUPABASE_DB_HOST` | No | Default: `aws-0-us-west-2.pooler.supabase.com` |
+| `SUPABASE_DB_USER` | No | Default: `postgres.dugqtfasgcprvqpcktdl` |
+| `SUPABASE_DB_NAME` | No | Default: `postgres` |
+| `SUPABASE_DB_PORT` | No | Default: `5432` |
+
+If the repo root is not the Django project (e.g. app is in `python/the_80_percent_bill`), add `working-directory` to the job in `.github/workflows/deploy-check.yml`.
 
 ---
 
@@ -106,7 +135,7 @@ Open **http://127.0.0.1:8000/** (or your chosen port) in your browser.
    | Variable | Required | Description |
    |----------|----------|-------------|
    | `SUPABASE_DB_PASSWORD` | Yes | Supabase database password |
-   | `SUPABASE_DB_HOST` | Yes (Railway) | **Use pooler** (IPv4): e.g. `aws-0-us-east-1.pooler.supabase.com` — from Supabase → Connect → Session pooler. Direct `db.xxx.supabase.co` uses IPv6 and fails on Railway. |
+   | `SUPABASE_DB_HOST` | Yes (Railway) | **Use pooler** (IPv4): `aws-0-us-west-2.pooler.supabase.com` — from Supabase → Connect → Session pooler. Direct `db.xxx.supabase.co` uses IPv6 and fails on Railway. |
    | `SUPABASE_DB_USER` | Yes (Railway) | **Use pooler user**: `postgres.<PROJECT_REF>` (e.g. `postgres.dugqtfasgcprvqpcktdl`) — from Supabase → Connect → Session pooler |
    | `SUPABASE_DB_NAME` | No | Default: `postgres` |
    | `SUPABASE_DB_PORT` | No | Default: `5432` (session pooler) |
@@ -127,6 +156,8 @@ Open **http://127.0.0.1:8000/** (or your chosen port) in your browser.
 
 | Command | Description |
 |---------|-------------|
-| `python manage.py runserver` | Start dev server |
+| `source venv/bin/activate` | Activate virtual environment (macOS/Linux) |
+| `deactivate` | Exit virtual environment |
+| `python manage.py runserver` | Start dev server (port 8000) |
 | `python manage.py migrate` | Apply migrations |
 | `python manage.py createsuperuser` | Create admin user |

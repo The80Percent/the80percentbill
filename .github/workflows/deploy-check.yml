@@ -1,0 +1,48 @@
+# Runs before Railway deploys (when "Trigger deployments after GitHub actions" is on).
+# Validates: install, Supabase connection, migrations, collectstatic, Django check, gunicorn startup.
+name: Deploy check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  deploy-check:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_DB_HOST: ${{ secrets.SUPABASE_DB_HOST || 'aws-0-us-west-2.pooler.supabase.com' }}
+      SUPABASE_DB_USER: ${{ secrets.SUPABASE_DB_USER || 'postgres.dugqtfasgcprvqpcktdl' }}
+      SUPABASE_DB_NAME: ${{ secrets.SUPABASE_DB_NAME || 'postgres' }}
+      SUPABASE_DB_PORT: ${{ secrets.SUPABASE_DB_PORT || '5432' }}
+      SUPABASE_USE_POOLER: "true"
+      GEOCODIO_API_KEY: ${{ secrets.GEOCODIO_API_KEY }}
+      DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run migrations (Supabase)
+        run: python manage.py migrate --noinput
+
+      - name: Collect static files
+        run: python manage.py collectstatic --noinput
+
+      - name: Django system check
+        run: python manage.py check
+
+      - name: Verify gunicorn starts
+        run: |
+          # Timeout exits 124 when it kills the process — that means gunicorn ran successfully
+          timeout 5 python -m gunicorn the_80_percent_bill.wsgi --bind 0.0.0.0:8000
+          [ $? -eq 124 ]
