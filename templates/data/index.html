@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}The 80% Bill - District Data{% endblock %}
+{% block main_content_class %}data-page{% endblock %}
+
+{% block content %}
+<h1>Pledge Support by District</h1>
+<p>This map shows anonymized pledge counts per congressional district. Zoom in to explore smaller districts.</p>
+
+<div id="map-container">
+    <div id="map"></div>
+    <div id="map-loading">Loading map data...</div>
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/topojson-client@3"></script>
+
+<script>
+(function() {
+    var FIPS_TO_STATE = {
+        "01":"AL","02":"AK","04":"AZ","05":"AR","06":"CA","08":"CO","09":"CT",
+        "10":"DE","11":"DC","12":"FL","13":"GA","15":"HI","16":"ID","17":"IL",
+        "18":"IN","19":"IA","20":"KS","21":"KY","22":"LA","23":"ME","24":"MD",
+        "25":"MA","26":"MI","27":"MN","28":"MS","29":"MO","30":"MT","31":"NE",
+        "32":"NV","33":"NH","34":"NJ","35":"NM","36":"NY","37":"NC","38":"ND",
+        "39":"OH","40":"OK","41":"OR","42":"PA","44":"RI","45":"SC","46":"SD",
+        "47":"TN","48":"TX","49":"UT","50":"VT","51":"VA","53":"WA","54":"WV",
+        "55":"WI","56":"WY","60":"AS","66":"GU","69":"MP","72":"PR","78":"VI"
+    };
+
+    var STATE_NAMES = {
+        "AL":"Alabama","AK":"Alaska","AZ":"Arizona","AR":"Arkansas","CA":"California",
+        "CO":"Colorado","CT":"Connecticut","DE":"Delaware","DC":"District of Columbia",
+        "FL":"Florida","GA":"Georgia","HI":"Hawaii","ID":"Idaho","IL":"Illinois",
+        "IN":"Indiana","IA":"Iowa","KS":"Kansas","KY":"Kentucky","LA":"Louisiana",
+        "ME":"Maine","MD":"Maryland","MA":"Massachusetts","MI":"Michigan","MN":"Minnesota",
+        "MS":"Mississippi","MO":"Missouri","MT":"Montana","NE":"Nebraska","NV":"Nevada",
+        "NH":"New Hampshire","NJ":"New Jersey","NM":"New Mexico","NY":"New York",
+        "NC":"North Carolina","ND":"North Dakota","OH":"Ohio","OK":"Oklahoma",
+        "OR":"Oregon","PA":"Pennsylvania","RI":"Rhode Island","SC":"South Carolina",
+        "SD":"South Dakota","TN":"Tennessee","TX":"Texas","UT":"Utah","VT":"Vermont",
+        "VA":"Virginia","WA":"Washington","WV":"West Virginia","WI":"Wisconsin",
+        "WY":"Wyoming","AS":"American Samoa","GU":"Guam","MP":"Northern Mariana Islands",
+        "PR":"Puerto Rico","VI":"U.S. Virgin Islands"
+    };
+
+    var AT_LARGE_98 = {"11":1,"60":1,"66":1,"69":1,"72":1,"78":1};
+
+    function geoidToLabel(geoid) {
+        var stateFips = geoid.substring(0, 2);
+        var suffix = geoid.substring(2);
+        var abbr = FIPS_TO_STATE[stateFips] || stateFips;
+        var name = STATE_NAMES[abbr] || abbr;
+        if (suffix === "00" || suffix === "98") return name + " (At-Large)";
+        return name + " District " + parseInt(suffix, 10);
+    }
+
+    function geoidToCode(geoid) {
+        var stateFips = geoid.substring(0, 2);
+        var suffix = geoid.substring(2);
+        var abbr = FIPS_TO_STATE[stateFips] || stateFips;
+        var distNum = (suffix === "00" || suffix === "98") ? 0 : parseInt(suffix, 10);
+        return abbr + "-" + distNum;
+    }
+
+    var GRADES = [0, 1, 5, 10, 25, 50, 100];
+    var COLORS = ["#f7fbff", "#c6dbef", "#6baed6", "#3182bd", "#1E3A5F", "#152a47", "#0a1628"];
+
+    function getColor(count) {
+        for (var i = GRADES.length - 1; i >= 0; i--) {
+            if (count >= GRADES[i]) return COLORS[i];
+        }
+        return COLORS[0];
+    }
+
+    var map = L.map("map", {
+        center: [39, -96],
+        zoom: 4,
+        minZoom: 3,
+        maxZoom: 12,
+        attributionControl: false
+    });
+
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+        subdomains: "abcd",
+        maxZoom: 20
+    }).addTo(map);
+
+    var geojsonLayer;
+    var pledgeData = {};
+    var unmappedCount = 0;
+    var loadingEl = document.getElementById("map-loading");
+
+    Promise.all([
+        fetch("{% static 'data/districts-topo.json' %}").then(function(r) { return r.json(); }),
+        fetch("{% url 'data:district_counts' %}").then(function(r) { return r.json(); })
+    ]).then(function(results) {
+        var topoData = results[0];
+        var countData = results[1];
+        pledgeData = countData.districts || {};
+        unmappedCount = countData.unmapped_count || 0;
+
+        var objectName = Object.keys(topoData.objects)[0];
+        var geojson = topojson.feature(topoData, topoData.objects[objectName]);
+
+        geojsonLayer = L.geoJSON(geojson, {
+            style: function(feature) {
+                var geoid = feature.properties.GEOID;
+                var count = pledgeData[geoid] || 0;
+                return {
+                    fillColor: getColor(count),
+                    weight: 0.8,
+                    opacity: 1,
+                    color: "#999",
+                    fillOpacity: 0.85
+                };
+            },
+            onEachFeature: function(feature, layer) {
+                var geoid = feature.properties.GEOID;
+                var count = pledgeData[geoid] || 0;
+                var label = geoidToLabel(geoid);
+                var code = geoidToCode(geoid);
+
+                layer.bindTooltip(
+                    "<strong>" + label + "</strong><br>" +
+                    "<span class='tooltip-code'>" + code + "</span><br>" +
+                    count + " pledge" + (count !== 1 ? "s" : ""),
+                    {sticky: true, className: "district-tooltip"}
+                );
+
+                layer.on({
+                    mouseover: function(e) {
+                        e.target.setStyle({weight: 2.5, color: "#C41E3A"});
+                        e.target.bringToFront();
+                    },
+                    mouseout: function(e) {
+                        geojsonLayer.resetStyle(e.target);
+                    }
+                });
+            }
+        }).addTo(map);
+
+        addLegend();
+        addTotalCount();
+        loadingEl.style.display = "none";
+    }).catch(function(err) {
+        loadingEl.textContent = "Failed to load map data. Please refresh.";
+        console.error(err);
+    });
+
+    function addTotalCount() {
+        var total = unmappedCount;
+        for (var k in pledgeData) total += pledgeData[k];
+        var ctrl = L.control({position: "topright"});
+        ctrl.onAdd = function() {
+            var div = L.DomUtil.create("div", "map-total");
+            div.innerHTML = "<strong>" + total.toLocaleString() + "</strong> total pledges";
+            return div;
+        };
+        ctrl.addTo(map);
+    }
+
+    function addLegend() {
+        var legend = L.control({position: "bottomright"});
+        legend.onAdd = function() {
+            var div = L.DomUtil.create("div", "map-legend");
+            var html = "<strong>Pledges</strong>";
+            for (var i = 0; i < GRADES.length; i++) {
+                var from = GRADES[i];
+                var to = GRADES[i + 1];
+                html += '<div class="legend-row">' +
+                    '<span class="legend-swatch" style="background:' + COLORS[i] + '"></span> ' +
+                    from + (to ? "&ndash;" + (to - 1) : "+") +
+                    "</div>";
+            }
+            if (unmappedCount > 0) {
+                html += '<div class="legend-unmapped">' +
+                    unmappedCount + " pledge" + (unmappedCount !== 1 ? "s" : "") +
+                    " could not be mapped to a district</div>";
+            }
+            div.innerHTML = html;
+            return div;
+        };
+        legend.addTo(map);
+    }
+})();
+</script>
+{% endblock %}

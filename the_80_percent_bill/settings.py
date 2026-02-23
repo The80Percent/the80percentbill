@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     "home",
     "bill",
     "pledge",
+    "data",
     "django.contrib.admin",
     'django.contrib.auth',
     'django.contrib.contenttypes',

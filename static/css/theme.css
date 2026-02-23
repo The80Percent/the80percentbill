@@ -68,7 +68,14 @@ body {
     font-size: 0.9rem;
     font-weight: 500;
     text-align: left;
+    text-decoration: none;
     cursor: pointer;
+    transition: background 0.2s;
+}
+
+.sidebar-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--white);
 }
 
 .sidebar-btn-disabled {
@@ -553,8 +560,137 @@ textarea:focus {
     }
 }
 
+/* === District Map === */
+.main-content.data-page {
+    padding: 1.5rem 2rem;
+}
+
+.main-content.data-page .main-content-inner {
+    max-width: 100%;
+}
+
+#map-container {
+    position: relative;
+    width: 100%;
+    border: 2px solid var(--gray-border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+#map {
+    width: 100%;
+    height: 70vh;
+    min-height: 400px;
+    background: var(--gray-light);
+}
+
+#map path:focus {
+    outline: none;
+}
+
+#map .leaflet-interactive:focus {
+    outline: none;
+}
+
+#map-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--white);
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+    color: var(--gray-text);
+    font-weight: 600;
+    z-index: 1000;
+}
+
+.map-legend {
+    background: var(--white);
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    font-size: 0.78rem;
+    color: var(--gray-text);
+    line-height: 1.5;
+    max-width: 200px;
+}
+
+.map-legend strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--blue-primary);
+    font-size: 0.9rem;
+}
+
+.legend-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.legend-swatch {
+    display: inline-block;
+    width: 18px;
+    height: 14px;
+    border: 1px solid #ccc;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.legend-unmapped {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--gray-border);
+    font-style: italic;
+    font-size: 0.8rem;
+    color: var(--gray-text);
+}
+
+.map-total {
+    background: var(--white);
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--blue-primary);
+}
+
+.map-total strong {
+    font-size: 1.4rem;
+    color: var(--blue-primary);
+}
+
+.district-tooltip {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.district-tooltip .tooltip-code {
+    color: #718096;
+    font-size: 0.8rem;
+}
+
 @media (min-width: 769px) {
     .sidebar-backdrop {
         display: none !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content.data-page {
+        padding: 1rem 0.75rem;
+        padding-top: calc(44px + 0.75rem);
+    }
+
+    #map {
+        height: 60vh;
+        min-height: 300px;
     }
 }

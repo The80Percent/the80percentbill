@@ -20,9 +20,9 @@
             <div class="sidebar-content">
                 <img src="{% static 'logo.png' %}" alt="The 80% Bill" class="sidebar-logo">
                 <hr class="sidebar-divider">
-                <button type="button" class="sidebar-btn sidebar-btn-disabled" disabled title="Coming soon">
-                    📊 View anonymized data by district <span class="coming-soon">(coming soon)</span>
-                </button>
+                <a href="{% url 'data:index' %}" class="sidebar-btn">
+                    📊 View anonymized data by district
+                </a>
                 <hr class="sidebar-divider">
                 <h3 class="sidebar-heading">Support the Project</h3>
                 <a href="{{ donation_link }}" target="_blank" rel="noopener noreferrer" class="donate-btn">
