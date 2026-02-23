@@ -10,13 +10,11 @@
     <div class="alert alert-success"><strong>Thank you!</strong> Your name has been added to the pledge.</div>
     <p></p>
     <a href="{{ donation_link }}" target="_blank" rel="noopener noreferrer" class="donate-success-btn">
-        ❤️ Donate $5 to help spread the word
+        💙  Donate $5 to help spread the word
     </a>
     <p></p>
-    <form method="post" style="margin-top: 1rem;">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="another">
-        <button type="submit" class="btn">Sign Another Person</button>
-    </form>
+    <a href="{% url 'data:index' %}" class="btn" style="display: inline-block;">
+        📊 View Pledge Data by District
+    </a>
 </div>
 {% endblock %}
