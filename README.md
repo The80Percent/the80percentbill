@@ -2,8 +2,6 @@
 
 A Django website for The 80% Bill — 21 bills that 80%+ of Americans support (formerly 22, but one if the bills has already been passed). Sign the pledge, read the bill, and support the project.
 
-Migrated from the Streamlit app at `/Users/bennett/Development/JS/the-80-percent-bill`.
-
 ## Architecture
 
 The project lives at `python/the_80_percent_bill/`. All commands run from there.
