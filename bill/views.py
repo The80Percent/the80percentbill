@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
-from .articles import ARTICLES, VETERANS_BILL_NOTE
+from .articles import ARTICLES
 
 def int_to_roman(num):
     """Convert an integer to a Roman numeral (1-30)."""
