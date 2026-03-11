@@ -107,7 +107,7 @@ If information can't be found on a topic, skip it — don't speculate.
 
 - `reps/models.py` — Add `narrative` and `narrative_updated` fields
 - `reps/templates/reps/detail.html` — Add "The Story" section
-- `reps/admin.py` — Add `narrative` to `readonly_fields` and `search_fields` (do NOT add to `list_display` — it's too large for the list view). Make it editable in admin only if someone needs to manually blank it for a rewrite.
+- `reps/admin.py` — Add `narrative` to `search_fields` (do NOT add to `list_display` — it's too large for the list view). Keep `narrative` editable in admin so someone can blank it to trigger a rewrite. Add `narrative_updated` to `readonly_fields`.
 - New migration file (auto-generated)
 
 ## Progress tracking
