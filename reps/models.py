@@ -122,7 +122,12 @@ class BillPosition(models.Model):
     last_checked = models.DateField(null=True, blank=True)
 
     class Meta:
-        unique_together = ["representative", "bill_article"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["representative", "bill_article"],
+                name="unique_rep_bill",
+            ),
+        ]
         ordering = ["bill_article"]
 
     def __str__(self):

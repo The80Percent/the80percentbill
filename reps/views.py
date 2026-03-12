@@ -25,7 +25,11 @@ US_STATES = [
 
 def directory(request):
     """List all representatives with search and filters."""
-    reps = Representative.objects.filter(in_office=True)
+    reps = Representative.objects.filter(in_office=True).only(
+        "bioguide_id", "first_name", "last_name", "full_name",
+        "party", "state", "district", "chamber",
+        "alignment_score", "hover_text",
+    )
 
     q = request.GET.get("q", "").strip()
     state = request.GET.get("state", "")
@@ -45,6 +49,8 @@ def directory(request):
     if chamber:
         reps = reps.filter(chamber=chamber)
 
+    reps = list(reps)
+
     return render(request, "reps/directory.html", {
         "reps": reps,
         "q": q,
@@ -52,7 +58,7 @@ def directory(request):
         "party": party,
         "chamber": chamber,
         "states": US_STATES,
-        "total": reps.count(),
+        "total": len(reps),
     })
 
 

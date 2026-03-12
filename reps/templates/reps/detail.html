@@ -127,16 +127,16 @@
     <h2>Social Media</h2>
     <div class="rep-social-links">
         {% if rep.twitter %}
-        <a href="https://twitter.com/{{ rep.twitter }}" target="_blank" rel="noopener" class="rep-social-btn">X / Twitter</a>
+        <a href="https://twitter.com/{{ rep.twitter }}" target="_blank" rel="noopener" class="btn btn-secondary">X / Twitter</a>
         {% endif %}
         {% if rep.facebook %}
-        <a href="https://facebook.com/{{ rep.facebook }}" target="_blank" rel="noopener" class="rep-social-btn">Facebook</a>
+        <a href="https://facebook.com/{{ rep.facebook }}" target="_blank" rel="noopener" class="btn btn-secondary">Facebook</a>
         {% endif %}
         {% if rep.youtube %}
-        <a href="https://youtube.com/{{ rep.youtube }}" target="_blank" rel="noopener" class="rep-social-btn">YouTube</a>
+        <a href="https://youtube.com/{{ rep.youtube }}" target="_blank" rel="noopener" class="btn btn-secondary">YouTube</a>
         {% endif %}
         {% if rep.instagram %}
-        <a href="https://instagram.com/{{ rep.instagram }}" target="_blank" rel="noopener" class="rep-social-btn">Instagram</a>
+        <a href="https://instagram.com/{{ rep.instagram }}" target="_blank" rel="noopener" class="btn btn-secondary">Instagram</a>
         {% endif %}
     </div>
 </div>
@@ -146,10 +146,7 @@
 <div class="rep-section">
     <h2>More Information</h2>
     <div class="rep-social-links">
-        <a href="{{ rep.congress_gov_url }}" target="_blank" rel="noopener" class="rep-social-btn">Congress.gov Profile</a>
-        {% if rep.opensecrets_url %}
-        <a href="{{ rep.opensecrets_url }}" target="_blank" rel="noopener" class="rep-social-btn">OpenSecrets</a>
-        {% endif %}
+        <a href="{{ rep.congress_gov_url }}" target="_blank" rel="noopener" class="btn btn-secondary">Congress.gov Profile</a>
     </div>
 </div>
 {% endblock %}

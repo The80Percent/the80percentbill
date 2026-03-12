@@ -33,14 +33,14 @@
     <button type="submit" class="btn">Filter</button>
 </form>
 
-<div class="score-slider-wrap" role="slider" aria-label="Filter by alignment tier" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0">
+<div class="score-slider-wrap">
     <div class="slider-track" id="slider-track">
         <div class="slider-fill" id="slider-fill"></div>
         <div class="slider-notch" data-tier="1"></div>
         <div class="slider-notch" data-tier="2"></div>
         <div class="slider-notch" data-tier="3"></div>
         <div class="slider-notch" data-tier="4"></div>
-        <div class="slider-thumb" id="slider-thumb" tabindex="0"></div>
+        <div class="slider-thumb" id="slider-thumb" tabindex="0" role="slider" aria-label="Filter by alignment tier" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0"></div>
     </div>
     <div class="score-slider-tiers">
         <span class="score-tier active" data-tier="0">All</span>
@@ -81,7 +81,6 @@
     var track = document.getElementById('slider-track');
     var thumb = document.getElementById('slider-thumb');
     var fill = document.getElementById('slider-fill');
-    var wrap = document.querySelector('.score-slider-wrap');
     var cards = document.querySelectorAll('.rep-card');
     var tiers = [null, [0,3], [4,7], [8,11], [12,15], [16,20]];
     var tierLabels = document.querySelectorAll('.score-tier');
@@ -92,8 +91,14 @@
     var currentTier = 0;
     var currentPos = 0;   // continuous 0–1 position
     var dragging = false;
-    var animating = false;
     var animId = null;
+    var cachedRect = null;
+
+    // Pre-parse scores once — avoids parseInt on every filter pass
+    var cardScores = [];
+    cards.forEach(function(card) {
+        cardScores.push(parseInt(card.dataset.score));
+    });
 
     // Position notches evenly
     notches.forEach(function(n) {
@@ -119,9 +124,8 @@
     var hideTimers = [];
     function filterCards(tier) {
         if (tier === currentTier) return;
-        var prevTier = currentTier;
         currentTier = tier;
-        wrap.setAttribute('aria-valuenow', tier);
+        thumb.setAttribute('aria-valuenow', tier);
 
         tierLabels.forEach(function(el) {
             el.classList.toggle('active', parseInt(el.dataset.tier) === tier);
@@ -133,8 +137,8 @@
 
         var range = tiers[tier];
         var visible = 0;
-        cards.forEach(function(card) {
-            var score = parseInt(card.dataset.score);
+        cards.forEach(function(card, i) {
+            var score = cardScores[i];
             var show = !range || (score >= range[0] && score <= range[1]);
             if (show) {
                 card.classList.remove('hiding', 'hidden-by-slider');
@@ -155,7 +159,8 @@
     // --- Spring animation ---
     function springTo(target) {
         if (animId) cancelAnimationFrame(animId);
-        animating = true;
+
+
 
         var decay = 8;
         var freq = 18;
@@ -175,7 +180,6 @@
             // Check if settled (< 0.2% of range away from target)
             if (Math.abs(offset) < 0.002 && dt > 0.05) {
                 setThumbPos(target);
-                animating = false;
                 animId = null;
                 filterCards(tierFromPos(target));
                 return;
@@ -195,7 +199,7 @@
 
     // --- Pointer handling ---
     function getPosFromEvent(e) {
-        var rect = track.getBoundingClientRect();
+        var rect = cachedRect || track.getBoundingClientRect();
         var raw = (e.clientX - rect.left) / rect.width;
 
         if (dragging) {
@@ -218,7 +222,8 @@
         e.preventDefault();
         e.stopPropagation();
         dragging = true;
-        if (animId) { cancelAnimationFrame(animId); animId = null; animating = false; }
+        cachedRect = track.getBoundingClientRect();
+        if (animId) { cancelAnimationFrame(animId); animId = null; }
         thumb.classList.add('dragging');
         thumb.setPointerCapture(e.pointerId);
 
@@ -248,6 +253,7 @@
     function onPointerUp(e) {
         if (!dragging) return;
         dragging = false;
+        cachedRect = null;
         thumb.classList.remove('dragging');
 
         // Clamp to valid range and spring to nearest tier
